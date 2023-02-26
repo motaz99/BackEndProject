@@ -1,9 +1,19 @@
-const express = require("express");
-const fs = require("fs");
+const express = require('express');
+const fs = require('fs');
 
 const app = express();
-
 app.use(express.json());
+
+app.use((req, res, next) => {
+  console.log('Hello from the middleware');
+  next();
+});
+
+app.use((req, res, next) => {
+  console.log('Hello from the second middleware');
+  req.requestTime = new Date().toISOString();
+  next();
+});
 
 const tours = JSON.parse(
   fs.readFileSync(
@@ -12,9 +22,10 @@ const tours = JSON.parse(
 );
 
 const getAllTours = (req, res) => {
-  console.log(tours);
+  console.log(req.requestTime);
   res.status(200).json({
-    status: "success",
+    status: 'success',
+    requestedAt: req.requestTime,
     result: tours.length,
     data: {
       tours,
@@ -23,20 +34,19 @@ const getAllTours = (req, res) => {
 };
 
 const getTour = (req, res) => {
-  console.log(req.params);
   const id = req.params.id * 1;
 
   if (id > tours.length) {
     return res.status(404).json({
-      status: "fail",
-      message: "Invalid ID",
+      status: 'fail',
+      message: 'Invalid ID',
     });
   }
 
   const tour = tours.find((el) => el.id === id);
   console.log(tour);
   res.status(200).json({
-    status: "success",
+    status: 'success',
     result: tours.length,
     data: {
       tour,
@@ -55,7 +65,7 @@ const createTour = (req, res) => {
     JSON.stringify(tours),
     (err) => {
       res.status(201).json({
-        status: "success",
+        status: 'success',
         data: {
           tour: newTour,
         },
@@ -67,14 +77,14 @@ const createTour = (req, res) => {
 const updateTour = (req, res) => {
   if (req.params.id * 1 > tours.length) {
     return res.status(404).json({
-      status: "fail",
-      message: "Invalid ID",
+      status: 'fail',
+      message: 'Invalid ID',
     });
   }
   res.status(200).json({
-    status: "success",
+    status: 'success',
     data: {
-      tour: "Updated tour here...",
+      tour: 'Updated tour here...',
     },
   });
 };
@@ -82,12 +92,12 @@ const updateTour = (req, res) => {
 const deleteTour = (req, res) => {
   if (req.params.id * 1 > tours.length) {
     return res.status(404).json({
-      status: "fail",
-      message: "Invalid ID",
+      status: 'fail',
+      message: 'Invalid ID',
     });
   }
   res.status(204).json({
-    status: "success",
+    status: 'success',
     data: null,
   });
 };
@@ -99,11 +109,11 @@ const deleteTour = (req, res) => {
 // app.delete('/api/v1/tours/:id', deleteTour);
 
 app
-  .route("/api/v1/tours")
+  .route('/api/v1/tours')
   .get(getAllTours)
   .post(createTour);
 app
-  .route("/api/v1/tours/:id")
+  .route('/api/v1/tours/:id')
   .get(getTour)
   .patch(updateTour)
   .delete(deleteTour);
