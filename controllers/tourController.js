@@ -4,7 +4,7 @@ const Tour = require('../models/tourModel');
 exports.getAllTours = async (req, res) => {
   try {
     // FIRST WE BUILD THE QUERY
-    // 1) fILTERING
+    // 1A) FILTERING
     const queryObj = { ...req.query };
     const excludedFields = [
       'page',
@@ -14,13 +14,24 @@ exports.getAllTours = async (req, res) => {
     ];
     excludedFields.forEach((el) => delete queryObj[el]);
 
-    // 2) Advanced filtering
+    // 2B) Advanced filtering
     let queryStr = JSON.stringify(queryObj);
     queryStr = queryStr.replace(
       /(gte|gt|lte|lt)\b/g,
       (match) => `$${match}`
     );
-    const query = Tour.find(JSON.parse(queryStr));
+    let query = Tour.find(JSON.parse(queryStr));
+
+    // 2) Sorting
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(',').join(' ');
+      console.log(sortBy);
+      query = query.sort(sortBy);
+      // if we want to sort depending on a second criteria we pass another argument to the sort func and also add that in the url with the ,  for ex: http://127.0.0.1:3000/api/v1/tours?sort=-price,ratingsAverage
+      // sort('price ratingsAverage')
+    } else {
+      query = query.sort('-createdAt');
+    }
 
     // SECOND WE EXECUTE THE QUERY
     const tours = await query;
